@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'models/daily_entry.dart';
 import 'screens/daily_entry_screen.dart';
+import 'database/database_helper.dart';
 
 void main() {
   runApp(const FitTrackApp());
@@ -36,6 +37,54 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   DailyEntry? _latestEntry;
 
+
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLatestEntry();
+  }
+
+
+  Future<void> _loadLatestEntry() async {
+    try {
+      debugPrint('DASHBOARD: Loading latest entry...');
+
+      final entry =
+      await DatabaseHelper.instance.getLatestEntry();
+
+      debugPrint(
+        'DASHBOARD: Loaded entry: '
+            '${entry?.date}, Weight: ${entry?.weight}',
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _latestEntry = entry;
+        _isLoading = false;
+      });
+    } catch (error) {
+      debugPrint('DATABASE ERROR: $error');
+
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load entries: $error'),
+        ),
+      );
+    }
+  }
+
+
+
+
   Future<void> _addEntry() async {
     final entry = await Navigator.push<DailyEntry>(
       context,
@@ -46,16 +95,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     if (!mounted || entry == null) return;
 
-    setState(() {
-      _latestEntry = entry;
-    });
+    try {
+      await DatabaseHelper.instance.saveEntry(entry);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Entry added for this session!'),
-      ),
-    );
+      await _loadLatestEntry();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Daily entry saved successfully!'),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to save entry: $error'),
+        ),
+      );
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +125,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         title: const Text('FitTrack'),
       ),
-      body: ListView(
+      body: _isLoading
+        ? const Center(
+        child: CircularProgressIndicator(),
+      )
+      : ListView(
         padding: const EdgeInsets.all(20),
         children: [
           const Text(

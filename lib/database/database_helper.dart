@@ -1,4 +1,5 @@
 
+import 'package:flutter/cupertino.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -52,15 +53,33 @@ class DatabaseHelper {
 
   // CREATE or UPDATE
   // One entry per date. Saving the same date replaces its row.
+
   Future<void> saveEntry(DailyEntry entry) async {
     final db = await database;
+
+    debugPrint('DATABASE: Saving entry for ${entry.date}');
 
     await db.insert(
       _tableName,
       entry.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+
+    debugPrint('DATABASE: Entry saved successfully');
+
+    final entries = await getAllEntries();
+
+    debugPrint('DATABASE: Total saved entries: ${entries.length}');
+
+    for (final savedEntry in entries) {
+      debugPrint(
+        'DATABASE: ${savedEntry.date} '
+            '- Weight: ${savedEntry.weight} '
+            '- Calories: ${savedEntry.calories}',
+      );
+    }
   }
+
 
   // READ one entry by date.
   Future<DailyEntry?> getEntryByDate(DateTime date) async {
