@@ -2,7 +2,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-
+import 'package:flutter/foundation.dart';
 import '../models/daily_entry.dart';
 
 class DatabaseHelper {
@@ -11,7 +11,19 @@ class DatabaseHelper {
   static final DatabaseHelper instance =
   DatabaseHelper._internal();
 
+  @visibleForTesting
+  static DatabaseFactory? testDatabaseFactory;
+
   static Database? _database;
+  @visibleForTesting
+  static Future<void> resetForTesting() async {
+    final db = _database;
+    _database = null;
+
+    if (db != null) {
+      await db.close();
+    }
+  }
 
   static const String _tableName = 'daily_entries';
 
@@ -25,15 +37,20 @@ class DatabaseHelper {
     return db;
   }
 
-  Future<Database> _initializeDatabase() async {
-    final databasePath = await getDatabasesPath();
-    final dbPath = join(databasePath, 'fittrack.db');
 
-    return openDatabase(
+  Future<Database> _initializeDatabase() async {
+    final factory = testDatabaseFactory ?? databaseFactory;
+
+    final dbPath = testDatabaseFactory != null
+        ? inMemoryDatabasePath
+        : join(await getDatabasesPath(), 'fittrack.db');
+
+    return factory.openDatabase(
       dbPath,
-      version: 1,
-      onCreate: (db, version) async {
-        await db.execute('''
+      options: OpenDatabaseOptions(
+        version: 1,
+        onCreate: (db, version) async {
+          await db.execute('''
           CREATE TABLE daily_entries (
             date TEXT PRIMARY KEY,
             weight REAL,
@@ -47,9 +64,11 @@ class DatabaseHelper {
             notes TEXT
           )
         ''');
-      },
+        },
+      ),
     );
   }
+
 
   // CREATE or UPDATE
   // One entry per date. Saving the same date replaces its row.

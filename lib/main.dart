@@ -85,17 +85,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
 
 
+
   Future<void> _addEntry() async {
-    final entry = await Navigator.push<DailyEntry>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const DailyEntryScreen(),
-      ),
-    );
-
-    if (!mounted || entry == null) return;
-
     try {
+      final today = DateTime.now();
+
+      final existingEntry =
+      await DatabaseHelper.instance.getEntryByDate(today);
+
+      if (!mounted) return;
+
+      final entry = await Navigator.push<DailyEntry>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DailyEntryScreen(
+            initialEntry: existingEntry,
+          ),
+        ),
+      );
+
+      if (!mounted || entry == null) return;
+
       await DatabaseHelper.instance.saveEntry(entry);
 
       await _loadLatestEntry();
@@ -103,8 +113,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Daily entry saved successfully!'),
+        SnackBar(
+          content: Text(
+            existingEntry == null
+                ? 'Daily entry saved successfully!'
+                : 'Daily entry updated successfully!',
+          ),
         ),
       );
     } catch (error) {
@@ -117,6 +131,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     }
   }
+
 
 
   @override

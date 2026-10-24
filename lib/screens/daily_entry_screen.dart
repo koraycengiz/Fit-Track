@@ -3,7 +3,12 @@ import 'package:flutter/material.dart';
 import '../models/daily_entry.dart';
 
 class DailyEntryScreen extends StatefulWidget {
-  const DailyEntryScreen({super.key});
+  final DailyEntry? initialEntry;
+
+  const DailyEntryScreen({
+    super.key,
+    this.initialEntry,
+  });
 
   @override
   State<DailyEntryScreen> createState() =>
@@ -24,6 +29,31 @@ class _DailyEntryScreenState extends State<DailyEntryScreen> {
   final _waistController = TextEditingController();
   final _workoutController = TextEditingController();
   final _notesController = TextEditingController();
+
+
+  @override
+  void initState() {
+    super.initState();
+
+    final entry = widget.initialEntry;
+
+    if (entry != null) {
+      _selectedDate = entry.date;
+
+      _weightController.text = entry.weight?.toString() ?? '';
+      _caloriesController.text =
+          entry.calories?.toString() ?? '';
+      _proteinController.text =
+          entry.protein?.toString() ?? '';
+      _carbsController.text = entry.carbs?.toString() ?? '';
+      _fatController.text = entry.fat?.toString() ?? '';
+      _stepsController.text = entry.steps?.toString() ?? '';
+      _waistController.text = entry.waist?.toString() ?? '';
+      _workoutController.text = entry.workout ?? '';
+      _notesController.text = entry.notes ?? '';
+    }
+  }
+
 
   @override
   void dispose() {
@@ -196,7 +226,11 @@ class _DailyEntryScreenState extends State<DailyEntryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Daily Entry'),
+        title: Text(
+          widget.initialEntry == null
+              ? 'New Daily Entry'
+              : 'Edit Daily Entry',
+        ),
       ),
 
       // Keeps the form and save button above the keyboard.
@@ -359,8 +393,10 @@ class _DailyEntryScreenState extends State<DailyEntryScreen> {
             child: FilledButton.icon(
               onPressed: _saveEntry,
               icon: const Icon(Icons.check),
-              label: const Text(
-                'Save Entry',
+              label: Text(
+                widget.initialEntry == null
+                    ? 'Save Entry'
+                    : 'Update Entry',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
