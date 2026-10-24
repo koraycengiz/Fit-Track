@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'models/daily_entry.dart';
 import 'screens/daily_entry_screen.dart';
 import 'database/database_helper.dart';
+import 'screens/history_screen.dart';
 
 void main() {
   runApp(const FitTrackApp());
@@ -45,6 +46,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     _loadLatestEntry();
   }
+
+
+  Future<void> _openHistory() async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const HistoryScreen(),
+      ),
+    );
+
+    if (!mounted) return;
+
+    await _loadLatestEntry();
+  }
+
 
 
   Future<void> _loadLatestEntry() async {
@@ -139,6 +155,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('FitTrack'),
+        actions: [
+          IconButton(
+            tooltip: 'Daily History',
+            icon: const Icon(Icons.history),
+            onPressed: _openHistory,
+          ),
+        ],
       ),
       body: _isLoading
         ? const Center(
