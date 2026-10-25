@@ -75,7 +75,7 @@ void main() {
     expect(find.text('Avg. Protein'), findsOneWidget);
 
     expect(find.text('75.3 kg'), findsOneWidget);
-    expect(find.text('2400.0 kcal'), findsOneWidget);
+    expect(find.text('2,400 kcal'), findsOneWidget);
     expect(find.text('145.0 g'), findsOneWidget);
   });
 
@@ -98,7 +98,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('75.8 kg'), findsOneWidget);
-    expect(find.text('2533.3 kcal'), findsOneWidget);
+    expect(find.text('2,533 kcal'), findsOneWidget);
   });
 
   testWidgets('Metric selector changes chart', (

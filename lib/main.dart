@@ -81,15 +81,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadLatestEntry() async {
     try {
-      debugPrint('DASHBOARD: Loading latest entry...');
 
       final entry =
       await DatabaseHelper.instance.getLatestEntry();
-
-      debugPrint(
-        'DASHBOARD: Loaded entry: '
-            '${entry?.date}, Weight: ${entry?.weight}',
-      );
 
       if (!mounted) return;
 
@@ -98,7 +92,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _isLoading = false;
       });
     } catch (error) {
-      debugPrint('DATABASE ERROR: $error');
 
       if (!mounted) return;
 

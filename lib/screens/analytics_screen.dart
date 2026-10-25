@@ -60,6 +60,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
 
+  String _formatCalories(double? value) {
+    if (value == null) return '—';
+
+    final rounded = value.round();
+
+    final formatted = rounded.toString().replaceAllMapped(
+      RegExp(r'\B(?=(\d{3})+(?!\d))'),
+          (match) => ',',
+    );
+
+    return '$formatted kcal';
+  }
+
+
+
   String _formatAverage(double? value, String unit) {
     if (value == null) return '—';
 
@@ -155,9 +170,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   children: [
                     _summaryCard(
                       'Avg. Calories',
-                      _formatAverage(
+                      _formatCalories(
                         AnalyticsService.averageCalories(filtered),
-                        'kcal',
                       ),
                     ),
                     _summaryCard(
