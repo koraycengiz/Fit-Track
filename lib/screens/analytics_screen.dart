@@ -50,6 +50,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     }
   }
 
+
+  String _formatWeightChange(double? change) {
+    if (change == null) return '—';
+
+    final sign = change > 0 ? '+' : '';
+
+    return '$sign${change.toStringAsFixed(1)} kg';
+  }
+
+
   String _formatAverage(double? value, String unit) {
     if (value == null) return '—';
 
@@ -121,21 +131,43 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               },
             ),
             const SizedBox(height: 20),
-            Row(
+            Column(
               children: [
-                _summaryCard(
-                  'Avg. Weight',
-                  _formatAverage(
-                    AnalyticsService.averageWeight(filtered),
-                    'kg',
-                  ),
+                Row(
+                  children: [
+                    _summaryCard(
+                      'Avg. Weight',
+                      _formatAverage(
+                        AnalyticsService.averageWeight(filtered),
+                        'kg',
+                      ),
+                    ),
+                    _summaryCard(
+                      'Weight Change',
+                      _formatWeightChange(
+                        AnalyticsService.weightChange(filtered),
+                      ),
+                    ),
+                  ],
                 ),
-                _summaryCard(
-                  'Avg. Protein',
-                  _formatAverage(
-                    AnalyticsService.averageProtein(filtered),
-                    'g',
-                  ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    _summaryCard(
+                      'Avg. Calories',
+                      _formatAverage(
+                        AnalyticsService.averageCalories(filtered),
+                        'kcal',
+                      ),
+                    ),
+                    _summaryCard(
+                      'Avg. Protein',
+                      _formatAverage(
+                        AnalyticsService.averageProtein(filtered),
+                        'g',
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
