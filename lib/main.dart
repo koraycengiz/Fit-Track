@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'models/daily_entry.dart';
 import 'screens/daily_entry_screen.dart';
+import 'database/database_helper.dart';
+import 'screens/history_screen.dart';
 
 void main() {
   runApp(const FitTrackApp());
@@ -36,34 +38,136 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   DailyEntry? _latestEntry;
 
-  Future<void> _addEntry() async {
-    final entry = await Navigator.push<DailyEntry>(
+
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLatestEntry();
+  }
+
+
+  Future<void> _openHistory() async {
+    await Navigator.push<void>(
       context,
       MaterialPageRoute(
-        builder: (context) => const DailyEntryScreen(),
+        builder: (context) => const HistoryScreen(),
       ),
     );
 
-    if (!mounted || entry == null) return;
+    if (!mounted) return;
 
-    setState(() {
-      _latestEntry = entry;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Entry added for this session!'),
-      ),
-    );
+    await _loadLatestEntry();
   }
+
+
+
+  Future<void> _loadLatestEntry() async {
+    try {
+      debugPrint('DASHBOARD: Loading latest entry...');
+
+      final entry =
+      await DatabaseHelper.instance.getLatestEntry();
+
+      debugPrint(
+        'DASHBOARD: Loaded entry: '
+            '${entry?.date}, Weight: ${entry?.weight}',
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _latestEntry = entry;
+        _isLoading = false;
+      });
+    } catch (error) {
+      debugPrint('DATABASE ERROR: $error');
+
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load entries: $error'),
+        ),
+      );
+    }
+  }
+
+
+
+
+
+  Future<void> _addEntry() async {
+    try {
+      final today = DateTime.now();
+
+      final existingEntry =
+      await DatabaseHelper.instance.getEntryByDate(today);
+
+      if (!mounted) return;
+
+      final entry = await Navigator.push<DailyEntry>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DailyEntryScreen(
+            initialEntry: existingEntry,
+          ),
+        ),
+      );
+
+      if (!mounted || entry == null) return;
+
+      await DatabaseHelper.instance.saveEntry(entry);
+
+      await _loadLatestEntry();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            existingEntry == null
+                ? 'Daily entry saved successfully!'
+                : 'Daily entry updated successfully!',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to save entry: $error'),
+        ),
+      );
+    }
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('FitTrack'),
+        actions: [
+          IconButton(
+            tooltip: 'Daily History',
+            icon: const Icon(Icons.history),
+            onPressed: _openHistory,
+          ),
+        ],
       ),
-      body: ListView(
+      body: _isLoading
+        ? const Center(
+        child: CircularProgressIndicator(),
+      )
+      : ListView(
         padding: const EdgeInsets.all(20),
         children: [
           const Text(
