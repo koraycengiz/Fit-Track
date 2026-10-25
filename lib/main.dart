@@ -4,6 +4,7 @@ import 'models/daily_entry.dart';
 import 'screens/daily_entry_screen.dart';
 import 'database/database_helper.dart';
 import 'screens/history_screen.dart';
+import 'screens/analytics_screen.dart';
 
 void main() {
   runApp(const FitTrackApp());
@@ -46,6 +47,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     _loadLatestEntry();
   }
+
+
+  Future<void> _openAnalytics() async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AnalyticsScreen(),
+      ),
+    );
+
+    if (!mounted) return;
+
+    await _loadLatestEntry();
+  }
+
 
 
   Future<void> _openHistory() async {
@@ -160,6 +176,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             tooltip: 'Daily History',
             icon: const Icon(Icons.history),
             onPressed: _openHistory,
+          ),
+          IconButton(
+            tooltip: 'Progress Analytics',
+            icon: const Icon(Icons.show_chart),
+            onPressed: _openAnalytics,
           ),
         ],
       ),
