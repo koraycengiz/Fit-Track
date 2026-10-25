@@ -154,7 +154,7 @@ class ProgressLineChart extends StatelessWidget {
                 leftTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
-                    reservedSize: 48,
+                    reservedSize: 52,
                     getTitlesWidget: (value, meta) {
                       return SideTitleWidget(
                         meta: meta,
@@ -162,24 +162,36 @@ class ProgressLineChart extends StatelessWidget {
                           value.toStringAsFixed(
                             metric == ProgressMetric.weight ? 1 : 0,
                           ),
-                          style: const TextStyle(fontSize: 10),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       );
                     },
                   ),
                 ),
+
               ),
               borderData: FlBorderData(show: false),
               lineTouchData: LineTouchData(
                 touchTooltipData: LineTouchTooltipData(
                   getTooltipItems: (touchedSpots) {
                     return touchedSpots.map((spot) {
+                      final date = firstDate.add(
+                        Duration(days: spot.x.round()),
+                      );
+
+                      final formattedValue = spot.y.toStringAsFixed(
+                        metric == ProgressMetric.weight ? 1 : 0,
+                      );
+
                       return LineTooltipItem(
-                        '${spot.y.toStringAsFixed(1)} $_unit',
+                        '${date.day}/${date.month}\n'
+                            '$formattedValue $_unit',
                         TextStyle(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onPrimary,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
                       );
@@ -187,6 +199,7 @@ class ProgressLineChart extends StatelessWidget {
                   },
                 ),
               ),
+
               lineBarsData: [
                 LineChartBarData(
                   spots: spots,
