@@ -5,6 +5,9 @@ import 'database/database_helper.dart';
 import 'screens/history_screen.dart';
 import 'screens/analytics_screen.dart';
 import 'screens/goals_screen.dart';
+import 'widgets/dashboard_metric_card.dart';
+import 'widgets/dashboard_quick_access.dart';
+import 'widgets/dashboard_empty_state.dart';
 
 void main() {
   runApp(const FitTrackApp());
@@ -143,29 +146,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  String get _entryDateLabel {
+    final entry = _latestEntry;
+
+    if (entry == null) {
+      return 'No fitness entries recorded yet';
+    }
+
+    final today = DateTime.now();
+
+    final isToday =
+        entry.date.year == today.year &&
+        entry.date.month == today.month &&
+        entry.date.day == today.day;
+
+    if (isToday) {
+      return "Today's fitness data";
+    }
+
+    return 'Latest entry: ${DailyEntry.dateKey(entry.date)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('FitTrack'),
-        actions: [
-          IconButton(
-            tooltip: 'Daily History',
-            icon: const Icon(Icons.history),
-            onPressed: _openHistory,
-          ),
-          IconButton(
-            tooltip: 'Progress Analytics',
-            icon: const Icon(Icons.show_chart),
-            onPressed: _openAnalytics,
-          ),
-          IconButton(
-            tooltip: 'Fitness Goals',
-            icon: const Icon(Icons.flag_outlined),
-            onPressed: _openGoals,
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('FitTrack')),
       body:
           _isLoading
               ? const Center(child: CircularProgressIndicator())
@@ -176,39 +181,70 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     'Your Fitness Dashboard',
                     style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                   ),
+                  const SizedBox(height: 6),
+                  Text(
+                    _entryDateLabel,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                   const SizedBox(height: 20),
-                  Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.monitor_weight),
-                      title: const Text('Weight'),
-                      subtitle: Text(
-                        _latestEntry?.weight == null
-                            ? 'No entry yet'
-                            : '${_latestEntry!.weight} kg',
-                      ),
+                  if (_latestEntry == null)
+                    DashboardEmptyState(onAddEntry: _addEntry)
+                  else
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        return GridView.count(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 1.35,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          children: [
+                            DashboardMetricCard(
+                              label: 'Weight',
+                              value:
+                                  _latestEntry?.weight == null
+                                      ? 'No data'
+                                      : '${_latestEntry!.weight} kg',
+                              icon: Icons.monitor_weight_outlined,
+                            ),
+                            DashboardMetricCard(
+                              label: 'Calories',
+                              value:
+                                  _latestEntry?.calories == null
+                                      ? 'No data'
+                                      : '${_latestEntry!.calories} kcal',
+                              icon: Icons.local_fire_department_outlined,
+                            ),
+                            DashboardMetricCard(
+                              label: 'Protein',
+                              value:
+                                  _latestEntry?.protein == null
+                                      ? 'No data'
+                                      : '${_latestEntry!.protein} g',
+                              icon: Icons.fitness_center_outlined,
+                            ),
+                            DashboardMetricCard(
+                              label: 'Steps',
+                              value:
+                                  _latestEntry?.steps == null
+                                      ? 'No data'
+                                      : '${_latestEntry!.steps}',
+                              icon: Icons.directions_walk_outlined,
+                            ),
+                          ],
+                        );
+                      },
                     ),
-                  ),
-                  Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.local_fire_department),
-                      title: const Text('Calories'),
-                      subtitle: Text(
-                        _latestEntry?.calories == null
-                            ? 'No entry yet'
-                            : '${_latestEntry!.calories} kcal',
-                      ),
-                    ),
-                  ),
-                  Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.directions_walk),
-                      title: const Text('Steps'),
-                      subtitle: Text(
-                        _latestEntry?.steps == null
-                            ? 'No entry yet'
-                            : '${_latestEntry!.steps}',
-                      ),
-                    ),
+                  const SizedBox(height: 28),
+
+                  DashboardQuickAccess(
+                    onHistory: _openHistory,
+                    onAnalytics: _openAnalytics,
+                    onGoals: _openGoals,
                   ),
                 ],
               ),
