@@ -13,11 +13,13 @@ void main() {
   setUp(() async {
     await DatabaseHelper.resetForTesting();
     DatabaseHelper.testDatabaseFactory = databaseFactoryFfiNoIsolate;
+    DatabaseHelper.testDatabasePath = null;
   });
 
   tearDown(() async {
     await DatabaseHelper.resetForTesting();
     DatabaseHelper.testDatabaseFactory = null;
+    DatabaseHelper.testDatabasePath = null;
   });
 
   group('Fitness Goals Database', () {
@@ -142,7 +144,7 @@ void main() {
       final dbPath = '${tempDir.path}/fittrack_migration.db';
 
       try {
-        // Create a database using the original version 1 schema.
+        // Create an existing version 1 database.
         final oldDb = await databaseFactoryFfiNoIsolate.openDatabase(
           dbPath,
           options: OpenDatabaseOptions(
@@ -166,6 +168,7 @@ void main() {
           ),
         );
 
+        // Insert an entry before upgrading.
         await oldDb.insert('daily_entries', {
           'date': '2026-10-20',
           'weight': 75.5,
@@ -175,59 +178,38 @@ void main() {
 
         await oldDb.close();
 
-        // Reopen the existing database as version 2.
-        final upgradedDb = await databaseFactoryFfiNoIsolate.openDatabase(
-          dbPath,
-          options: OpenDatabaseOptions(
-            version: 2,
-            onUpgrade: (db, oldVersion, newVersion) async {
-              if (oldVersion < 2) {
-                await db.execute('''
-              CREATE TABLE fitness_goals (
-                id INTEGER PRIMARY KEY CHECK (id = 1),
-                daily_calories INTEGER,
-                daily_protein REAL,
-                daily_carbs REAL,
-                daily_fat REAL,
-                daily_steps INTEGER,
-                target_weight REAL
-              )
-            ''');
-              }
-            },
-          ),
+        // Open the old database through our actual DatabaseHelper.
+        DatabaseHelper.testDatabasePath = dbPath;
+
+        final upgradedDb = await DatabaseHelper.instance.database;
+
+        // Verify the old fitness data still exists.
+        final entries = await upgradedDb.query('daily_entries');
+
+        expect(entries.length, 1);
+        expect(entries.first['date'], '2026-10-20');
+        expect(entries.first['weight'], 75.5);
+        expect(entries.first['calories'], 2500);
+        expect(entries.first['protein'], 145.0);
+
+        // Verify that the new goals functionality works.
+        await DatabaseHelper.instance.saveGoals(
+          const FitnessGoal(dailyCalories: 2300, dailyProtein: 150),
         );
 
-        try {
-          final entries = await upgradedDb.query('daily_entries');
+        final goals = await DatabaseHelper.instance.getGoals();
 
-          expect(entries.length, 1);
-          expect(entries.first['date'], '2026-10-20');
-          expect(entries.first['weight'], 75.5);
-          expect(entries.first['calories'], 2500);
+        expect(goals.dailyCalories, 2300);
+        expect(goals.dailyProtein, 150);
 
-          // Verify the new goals table works.
-          await upgradedDb.insert('fitness_goals', {
-            'id': 1,
-            'daily_calories': 2300,
-            'daily_protein': 150.0,
-          });
+        // Verify the SQLite database version.
+        final versionResult = await upgradedDb.rawQuery('PRAGMA user_version');
 
-          final goals = await upgradedDb.query('fitness_goals');
-
-          expect(goals.length, 1);
-          expect(goals.first['daily_calories'], 2300);
-
-          // Confirm the database version was upgraded.
-          final versionResult = await upgradedDb.rawQuery(
-            'PRAGMA user_version',
-          );
-
-          expect(versionResult.first['user_version'], 2);
-        } finally {
-          await upgradedDb.close();
-        }
+        expect(versionResult.first['user_version'], 2);
       } finally {
+        await DatabaseHelper.resetForTesting();
+        DatabaseHelper.testDatabasePath = null;
+
         await tempDir.delete(recursive: true);
       }
     });

@@ -12,8 +12,11 @@ class DatabaseHelper {
 
   @visibleForTesting
   static DatabaseFactory? testDatabaseFactory;
+  @visibleForTesting
+  static String? testDatabasePath;
 
   static Database? _database;
+
   @visibleForTesting
   static Future<void> resetForTesting() async {
     final db = _database;
@@ -41,9 +44,10 @@ class DatabaseHelper {
     final factory = testDatabaseFactory ?? databaseFactory;
 
     final dbPath =
-        testDatabaseFactory != null
+        testDatabasePath ??
+        (testDatabaseFactory != null
             ? inMemoryDatabasePath
-            : join(await getDatabasesPath(), 'fittrack.db');
+            : join(await getDatabasesPath(), 'fittrack.db'));
 
     return factory.openDatabase(
       dbPath,
