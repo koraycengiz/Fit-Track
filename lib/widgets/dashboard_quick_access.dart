@@ -4,12 +4,14 @@ class DashboardQuickAccess extends StatelessWidget {
   final VoidCallback onHistory;
   final VoidCallback onAnalytics;
   final VoidCallback onGoals;
+  final VoidCallback onBackup;
 
   const DashboardQuickAccess({
     super.key,
     required this.onHistory,
     required this.onAnalytics,
     required this.onGoals,
+    required this.onBackup,
   });
 
   @override
@@ -41,12 +43,24 @@ class DashboardQuickAccess extends StatelessWidget {
                 onTap: onAnalytics,
               ),
             ),
-            const SizedBox(width: 10),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
             Expanded(
               child: _QuickAccessButton(
                 label: 'Goals',
                 icon: Icons.flag_outlined,
                 onTap: onGoals,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _QuickAccessButton(
+                label: 'Backup',
+                icon: Icons.backup_outlined,
+                onTap: onBackup,
               ),
             ),
           ],
