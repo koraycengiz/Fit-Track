@@ -8,6 +8,7 @@ import 'screens/goals_screen.dart';
 import 'widgets/dashboard_metric_card.dart';
 import 'widgets/dashboard_quick_access.dart';
 import 'widgets/dashboard_empty_state.dart';
+import 'screens/backup_restore_screen.dart';
 
 void main() {
   runApp(const FitTrackApp());
@@ -79,6 +80,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     if (!mounted) return;
 
+    await _loadLatestEntry();
+  }
+
+  Future<void> _openBackup() async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(builder: (context) => const BackupRestoreScreen()),
+    );
+
+    if (!mounted) return;
+
+    // Refresh the Dashboard after returning from Backup & Restore.
     await _loadLatestEntry();
   }
 
@@ -245,6 +258,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     onHistory: _openHistory,
                     onAnalytics: _openAnalytics,
                     onGoals: _openGoals,
+                    onBackup: _openBackup,
                   ),
                 ],
               ),

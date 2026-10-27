@@ -14,6 +14,7 @@ void main() {
           onHistory: onHistory,
           onAnalytics: onAnalytics,
           onGoals: onGoals,
+          onBackup: () {},
         ),
       ),
     );

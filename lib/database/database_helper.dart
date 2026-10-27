@@ -194,4 +194,35 @@ class DatabaseHelper {
       whereArgs: [DailyEntry.dateKey(date)],
     );
   }
+
+  // Atomically replace all fitness data with a validated backup.
+  //
+  // Only call this after the entire backup has been validated.
+  // If any operation fails, SQLite rolls back all changes.
+  Future<void> replaceAllData({
+    required List<DailyEntry> entries,
+    required FitnessGoal? goals,
+  }) async {
+    final db = await database;
+
+    await db.transaction((txn) async {
+      await txn.delete(_tableName);
+      await txn.delete(_goalsTableName);
+
+      for (final entry in entries) {
+        await txn.insert(
+          _tableName,
+          entry.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.abort,
+        );
+      }
+
+      if (goals != null) {
+        await txn.insert(_goalsTableName, {
+          'id': 1,
+          ...goals.toMap(),
+        }, conflictAlgorithm: ConflictAlgorithm.abort);
+      }
+    });
+  }
 }
