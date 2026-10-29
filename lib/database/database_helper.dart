@@ -144,6 +144,67 @@ class DatabaseHelper {
     );
   }
 
+  // Atomically save an entry, optionally moving it from an old date.
+  //
+  // Throws StateError if the destination date already belongs
+  // to another entry. All operations are rolled back on failure.
+  Future<void> saveEntrySafely(
+    DailyEntry entry, {
+    DateTime? originalDate,
+  }) async {
+    final db = await database;
+
+    final newDateKey = DailyEntry.dateKey(entry.date);
+    final oldDateKey =
+        originalDate == null ? null : DailyEntry.dateKey(originalDate);
+
+    await db.transaction((txn) async {
+      // Check for a conflicting entry at the destination date.
+      final existing = await txn.query(
+        _tableName,
+        columns: ['date'],
+        where: 'date = ?',
+        whereArgs: [newDateKey],
+        limit: 1,
+      );
+
+      if (existing.isNotEmpty && newDateKey != oldDateKey) {
+        throw StateError('An entry already exists for that date.');
+      }
+
+      // When editing, verify the original entry still exists.
+      if (oldDateKey != null) {
+        final original = await txn.query(
+          _tableName,
+          columns: ['date'],
+          where: 'date = ?',
+          whereArgs: [oldDateKey],
+          limit: 1,
+        );
+
+        if (original.isEmpty) {
+          throw StateError('The original entry no longer exists.');
+        }
+      }
+
+      // Move the record when its date has changed.
+      if (oldDateKey != null && oldDateKey != newDateKey) {
+        await txn.delete(
+          _tableName,
+          where: 'date = ?',
+          whereArgs: [oldDateKey],
+        );
+      }
+
+      // Insert or update the entry.
+      await txn.insert(
+        _tableName,
+        entry.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    });
+  }
+
   // READ one entry by date.
   Future<DailyEntry?> getEntryByDate(DateTime date) async {
     final db = await database;

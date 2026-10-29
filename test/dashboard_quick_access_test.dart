@@ -13,6 +13,7 @@ void main() {
         body: DashboardQuickAccess(
           onHistory: onHistory,
           onAnalytics: onAnalytics,
+          onCalendar: () {},
           onGoals: onGoals,
           onBackup: () {},
         ),

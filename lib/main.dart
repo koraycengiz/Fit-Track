@@ -9,6 +9,7 @@ import 'widgets/dashboard_metric_card.dart';
 import 'widgets/dashboard_quick_access.dart';
 import 'widgets/dashboard_empty_state.dart';
 import 'screens/backup_restore_screen.dart';
+import 'screens/fitness_calendar_screen.dart';
 
 void main() {
   runApp(const FitTrackApp());
@@ -65,6 +66,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await Navigator.push<void>(
       context,
       MaterialPageRoute(builder: (context) => const HistoryScreen()),
+    );
+
+    if (!mounted) return;
+
+    await _loadLatestEntry();
+  }
+
+  Future<void> _openCalendar() async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(builder: (context) => const FitnessCalendarScreen()),
     );
 
     if (!mounted) return;
@@ -256,6 +268,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   DashboardQuickAccess(
                     onHistory: _openHistory,
+                    onCalendar: _openCalendar,
                     onAnalytics: _openAnalytics,
                     onGoals: _openGoals,
                     onBackup: _openBackup,
