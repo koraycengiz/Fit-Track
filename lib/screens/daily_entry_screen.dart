@@ -1,18 +1,14 @@
-
 import 'package:flutter/material.dart';
 import '../models/daily_entry.dart';
 
 class DailyEntryScreen extends StatefulWidget {
   final DailyEntry? initialEntry;
+  final DateTime? initialDate;
 
-  const DailyEntryScreen({
-    super.key,
-    this.initialEntry,
-  });
+  const DailyEntryScreen({super.key, this.initialEntry, this.initialDate});
 
   @override
-  State<DailyEntryScreen> createState() =>
-      _DailyEntryScreenState();
+  State<DailyEntryScreen> createState() => _DailyEntryScreenState();
 }
 
 class _DailyEntryScreenState extends State<DailyEntryScreen> {
@@ -30,21 +26,21 @@ class _DailyEntryScreenState extends State<DailyEntryScreen> {
   final _workoutController = TextEditingController();
   final _notesController = TextEditingController();
 
-
   @override
   void initState() {
     super.initState();
 
     final entry = widget.initialEntry;
+    if (entry == null && widget.initialDate != null) {
+      _selectedDate = DateUtils.dateOnly(widget.initialDate!);
+    }
 
     if (entry != null) {
       _selectedDate = entry.date;
 
       _weightController.text = entry.weight?.toString() ?? '';
-      _caloriesController.text =
-          entry.calories?.toString() ?? '';
-      _proteinController.text =
-          entry.protein?.toString() ?? '';
+      _caloriesController.text = entry.calories?.toString() ?? '';
+      _proteinController.text = entry.protein?.toString() ?? '';
       _carbsController.text = entry.carbs?.toString() ?? '';
       _fatController.text = entry.fat?.toString() ?? '';
       _stepsController.text = entry.steps?.toString() ?? '';
@@ -53,7 +49,6 @@ class _DailyEntryScreenState extends State<DailyEntryScreen> {
       _notesController.text = entry.notes ?? '';
     }
   }
-
 
   @override
   void dispose() {
@@ -92,17 +87,12 @@ class _DailyEntryScreenState extends State<DailyEntryScreen> {
     return double.tryParse(normalized);
   }
 
-  String? _validateNumber(
-      String? value, {
-        bool integer = false,
-      }) {
+  String? _validateNumber(String? value, {bool integer = false}) {
     if (value == null || value.trim().isEmpty) {
       return null;
     }
 
-    final number = integer
-        ? int.tryParse(value.trim())
-        : _parseDouble(value);
+    final number = integer ? int.tryParse(value.trim()) : _parseDouble(value);
 
     if (number == null || number < 0) {
       return 'Enter a valid non-negative number';
@@ -113,36 +103,29 @@ class _DailyEntryScreenState extends State<DailyEntryScreen> {
 
   // Reusable numeric input with label above the border.
   Widget _numberField(
-      String label,
-      TextEditingController controller, {
-        bool integer = false,
-        String? unit,
-      }) {
+    String label,
+    TextEditingController controller, {
+    bool integer = false,
+    String? unit,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(
-              left: 4,
-              bottom: 8,
-            ),
+            padding: const EdgeInsets.only(left: 4, bottom: 8),
             child: Text(
               label,
               style: TextStyle(
                 fontSize: 13,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurfaceVariant,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ),
           TextFormField(
             controller: controller,
-            keyboardType: TextInputType.numberWithOptions(
-              decimal: !integer,
-            ),
+            keyboardType: TextInputType.numberWithOptions(decimal: !integer),
             decoration: InputDecoration(
               hintText: '0',
               suffixText: unit,
@@ -155,8 +138,7 @@ class _DailyEntryScreenState extends State<DailyEntryScreen> {
                 vertical: 14,
               ),
             ),
-            validator: (value) =>
-                _validateNumber(value, integer: integer),
+            validator: (value) => _validateNumber(value, integer: integer),
           ),
         ],
       ),
@@ -169,20 +151,17 @@ class _DailyEntryScreenState extends State<DailyEntryScreen> {
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title,
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
+        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
       ),
     );
   }
 
   // Reusable multiline input.
   Widget _textField(
-      String label,
-      TextEditingController controller, {
-        String? hint,
-      }) {
+    String label,
+    TextEditingController controller, {
+    String? hint,
+  }) {
     return TextFormField(
       controller: controller,
       maxLines: 3,
@@ -190,9 +169,7 @@ class _DailyEntryScreenState extends State<DailyEntryScreen> {
         labelText: label,
         hintText: hint,
         alignLabelWithHint: true,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         contentPadding: const EdgeInsets.all(14),
       ),
     );
@@ -210,26 +187,25 @@ class _DailyEntryScreenState extends State<DailyEntryScreen> {
       fat: _parseDouble(_fatController.text),
       steps: int.tryParse(_stepsController.text.trim()),
       waist: _parseDouble(_waistController.text),
-      workout: _workoutController.text.trim().isEmpty
-          ? null
-          : _workoutController.text.trim(),
-      notes: _notesController.text.trim().isEmpty
-          ? null
-          : _notesController.text.trim(),
+      workout:
+          _workoutController.text.trim().isEmpty
+              ? null
+              : _workoutController.text.trim(),
+      notes:
+          _notesController.text.trim().isEmpty
+              ? null
+              : _notesController.text.trim(),
     );
 
     Navigator.pop(context, entry);
   }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.initialEntry == null
-              ? 'New Daily Entry'
-              : 'Edit Daily Entry',
+          widget.initialEntry == null ? 'New Daily Entry' : 'Edit Daily Entry',
         ),
       ),
 
@@ -241,14 +217,13 @@ class _DailyEntryScreenState extends State<DailyEntryScreen> {
         bottom: false,
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final horizontalPadding =
-            constraints.maxWidth < 400 ? 16.0 : 24.0;
+            final horizontalPadding = constraints.maxWidth < 400 ? 16.0 : 24.0;
 
             return Form(
               key: _formKey,
               child: ListView(
                 keyboardDismissBehavior:
-                ScrollViewKeyboardDismissBehavior.onDrag,
+                    ScrollViewKeyboardDismissBehavior.onDrag,
                 padding: EdgeInsets.symmetric(
                   horizontal: horizontalPadding,
                   vertical: 16,
@@ -261,8 +236,8 @@ class _DailyEntryScreenState extends State<DailyEntryScreen> {
                       title: const Text('Date'),
                       subtitle: Text(
                         '${_selectedDate.day}/'
-                            '${_selectedDate.month}/'
-                            '${_selectedDate.year}',
+                        '${_selectedDate.month}/'
+                        '${_selectedDate.year}',
                       ),
                       trailing: const Icon(Icons.edit_calendar),
                       onTap: _pickDate,
@@ -270,7 +245,6 @@ class _DailyEntryScreenState extends State<DailyEntryScreen> {
                   ),
 
                   const SizedBox(height: 24),
-
 
                   // Body measurements - compact 2-column layout
                   _sectionTitle('Body Measurements'),
@@ -295,7 +269,6 @@ class _DailyEntryScreenState extends State<DailyEntryScreen> {
                       ),
                     ],
                   ),
-
 
                   const SizedBox(height: 16),
 
@@ -336,11 +309,7 @@ class _DailyEntryScreenState extends State<DailyEntryScreen> {
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: _numberField(
-                          'Fat',
-                          _fatController,
-                          unit: 'g',
-                        ),
+                        child: _numberField('Fat', _fatController, unit: 'g'),
                       ),
                     ],
                   ),
@@ -350,11 +319,7 @@ class _DailyEntryScreenState extends State<DailyEntryScreen> {
                   // Activity
                   _sectionTitle('Activity'),
 
-                  _numberField(
-                    'Steps',
-                    _stepsController,
-                    integer: true,
-                  ),
+                  _numberField('Steps', _stepsController, integer: true),
 
                   const SizedBox(height: 12),
 
@@ -394,13 +359,8 @@ class _DailyEntryScreenState extends State<DailyEntryScreen> {
               onPressed: _saveEntry,
               icon: const Icon(Icons.check),
               label: Text(
-                widget.initialEntry == null
-                    ? 'Save Entry'
-                    : 'Update Entry',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
+                widget.initialEntry == null ? 'Save Entry' : 'Update Entry',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -408,5 +368,4 @@ class _DailyEntryScreenState extends State<DailyEntryScreen> {
       ),
     );
   }
-
 }

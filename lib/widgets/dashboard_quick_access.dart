@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class DashboardQuickAccess extends StatelessWidget {
   final VoidCallback onHistory;
+  final VoidCallback onCalendar;
   final VoidCallback onAnalytics;
   final VoidCallback onGoals;
   final VoidCallback onBackup;
@@ -10,6 +11,7 @@ class DashboardQuickAccess extends StatelessWidget {
     super.key,
     required this.onHistory,
     required this.onAnalytics,
+    required this.onCalendar,
     required this.onGoals,
     required this.onBackup,
   });
@@ -26,6 +28,7 @@ class DashboardQuickAccess extends StatelessWidget {
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
+
         Row(
           children: [
             Expanded(
@@ -38,9 +41,9 @@ class DashboardQuickAccess extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: _QuickAccessButton(
-                label: 'Analytics',
-                icon: Icons.show_chart,
-                onTap: onAnalytics,
+                label: 'Calendar',
+                icon: Icons.calendar_month_outlined,
+                onTap: onCalendar,
               ),
             ),
           ],
@@ -50,12 +53,24 @@ class DashboardQuickAccess extends StatelessWidget {
           children: [
             Expanded(
               child: _QuickAccessButton(
+                label: 'Analytics',
+                icon: Icons.show_chart,
+                onTap: onAnalytics,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _QuickAccessButton(
                 label: 'Goals',
                 icon: Icons.flag_outlined,
                 onTap: onGoals,
               ),
             ),
-            const SizedBox(width: 10),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
             Expanded(
               child: _QuickAccessButton(
                 label: 'Backup',
@@ -63,6 +78,7 @@ class DashboardQuickAccess extends StatelessWidget {
                 onTap: onBackup,
               ),
             ),
+            const Spacer(),
           ],
         ),
       ],
