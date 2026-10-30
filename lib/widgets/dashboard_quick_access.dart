@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class DashboardQuickAccess extends StatelessWidget {
+  final VoidCallback onEnterData;
   final VoidCallback onHistory;
   final VoidCallback onCalendar;
   final VoidCallback onAnalytics;
@@ -9,9 +10,10 @@ class DashboardQuickAccess extends StatelessWidget {
 
   const DashboardQuickAccess({
     super.key,
+    required this.onEnterData,
     required this.onHistory,
-    required this.onAnalytics,
     required this.onCalendar,
+    required this.onAnalytics,
     required this.onGoals,
     required this.onBackup,
   });
@@ -29,16 +31,24 @@ class DashboardQuickAccess extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
+        // Primary action - Enter Data
         Row(
           children: [
             Expanded(
               child: _QuickAccessButton(
-                label: 'History',
-                icon: Icons.history,
-                onTap: onHistory,
+                label: 'Enter Data',
+                icon: Icons.edit_note_outlined,
+                onTap: onEnterData,
               ),
             ),
-            const SizedBox(width: 10),
+          ],
+        ),
+
+        const SizedBox(height: 10),
+
+        // Main navigation
+        Row(
+          children: [
             Expanded(
               child: _QuickAccessButton(
                 label: 'Calendar',
@@ -46,11 +56,7 @@ class DashboardQuickAccess extends StatelessWidget {
                 onTap: onCalendar,
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
+            const SizedBox(width: 10),
             Expanded(
               child: _QuickAccessButton(
                 label: 'Analytics',
@@ -58,27 +64,40 @@ class DashboardQuickAccess extends StatelessWidget {
                 onTap: onAnalytics,
               ),
             ),
-            const SizedBox(width: 10),
+          ],
+        ),
+
+        const SizedBox(height: 10),
+
+        // Secondary navigation
+        Row(
+          children: [
+            Expanded(
+              child: _QuickAccessButton(
+                label: 'History',
+                icon: Icons.history,
+                onTap: onHistory,
+                compact: true,
+              ),
+            ),
+            const SizedBox(width: 8),
             Expanded(
               child: _QuickAccessButton(
                 label: 'Goals',
                 icon: Icons.flag_outlined,
                 onTap: onGoals,
+                compact: true,
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
+            const SizedBox(width: 8),
             Expanded(
               child: _QuickAccessButton(
                 label: 'Backup',
                 icon: Icons.backup_outlined,
                 onTap: onBackup,
+                compact: true,
               ),
             ),
-            const Spacer(),
           ],
         ),
       ],
@@ -90,11 +109,13 @@ class _QuickAccessButton extends StatelessWidget {
   final String label;
   final IconData icon;
   final VoidCallback onTap;
+  final bool compact;
 
   const _QuickAccessButton({
     required this.label,
     required this.icon,
     required this.onTap,
+    this.compact = false,
   });
 
   @override
@@ -107,17 +128,23 @@ class _QuickAccessButton extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 6),
+          padding: EdgeInsets.symmetric(
+            vertical: compact ? 13 : 18,
+            horizontal: 4,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: colorScheme.primary, size: 26),
-              const SizedBox(height: 8),
+              Icon(icon, color: colorScheme.primary, size: compact ? 22 : 26),
+              const SizedBox(height: 6),
               Text(
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: TextStyle(
+                  fontSize: compact ? 11 : 13,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),

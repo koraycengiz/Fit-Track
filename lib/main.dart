@@ -10,6 +10,7 @@ import 'widgets/dashboard_quick_access.dart';
 import 'widgets/dashboard_empty_state.dart';
 import 'screens/backup_restore_screen.dart';
 import 'screens/fitness_calendar_screen.dart';
+import 'services/tracking_streak_service.dart';
 
 void main() {
   runApp(const FitTrackApp());
@@ -42,6 +43,10 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   DailyEntry? _latestEntry;
+  TrackingStreakResult _streaks = const TrackingStreakResult(
+    currentStreak: 0,
+    longestStreak: 0,
+  );
 
   bool _isLoading = true;
 
@@ -107,14 +112,65 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await _loadLatestEntry();
   }
 
+  void _showStreakDetails() {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.local_fire_department_outlined),
+              SizedBox(width: 8),
+              Text('Tracking Streaks'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.local_fire_department_outlined),
+                title: const Text('Current Streak'),
+                trailing: Text('${_streaks.currentStreak} days'),
+                contentPadding: EdgeInsets.zero,
+              ),
+              ListTile(
+                leading: const Icon(Icons.emoji_events_outlined),
+                title: const Text('Longest Streak'),
+                trailing: Text('${_streaks.longestStreak} days'),
+                contentPadding: EdgeInsets.zero,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Your current streak remains active if you logged '
+                'an entry today or yesterday.',
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _loadLatestEntry() async {
     try {
-      final entry = await DatabaseHelper.instance.getLatestEntry();
+      final entries = await DatabaseHelper.instance.getAllEntries();
+
+      final latestEntry = entries.isEmpty ? null : entries.first;
+
+      final streaks = TrackingStreakService.calculate(entries);
 
       if (!mounted) return;
 
       setState(() {
-        _latestEntry = entry;
+        _latestEntry = latestEntry;
+        _streaks = streaks;
         _isLoading = false;
       });
     } catch (error) {
@@ -147,7 +203,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       if (!mounted || entry == null) return;
 
-      await DatabaseHelper.instance.saveEntry(entry);
+      await DatabaseHelper.instance.saveEntrySafely(
+        entry,
+        originalDate: existingEntry?.date,
+      );
 
       await _loadLatestEntry();
 
@@ -195,7 +254,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('FitTrack')),
+      appBar: AppBar(
+        title: const Text('FitTrack'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: ActionChip(
+              avatar: const Icon(
+                Icons.local_fire_department_outlined,
+                size: 20,
+              ),
+              label: Text('${_streaks.currentStreak} days'),
+              tooltip: 'View tracking streaks',
+              onPressed: _showStreakDetails,
+            ),
+          ),
+        ],
+      ),
       body:
           _isLoading
               ? const Center(child: CircularProgressIndicator())
@@ -267,6 +342,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 28),
 
                   DashboardQuickAccess(
+                    onEnterData: _addEntry,
                     onHistory: _openHistory,
                     onCalendar: _openCalendar,
                     onAnalytics: _openAnalytics,
@@ -275,10 +351,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ],
               ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addEntry,
-        child: const Icon(Icons.add),
-      ),
     );
   }
 }

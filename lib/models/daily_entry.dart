@@ -1,4 +1,3 @@
-
 class DailyEntry {
   final DateTime date;
   final double? weight;
