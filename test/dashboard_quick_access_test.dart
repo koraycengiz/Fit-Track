@@ -15,6 +15,7 @@ void main() {
           onAnalytics: onAnalytics,
           onCalendar: () {},
           onGoals: onGoals,
+          onEnterData: () {},
           onBackup: () {},
         ),
       ),
@@ -76,6 +77,37 @@ void main() {
     );
 
     await tester.tap(find.text('Goals'));
+
+    expect(tapped, isTrue);
+  });
+
+  testWidgets('displays Enter Data shortcut', (tester) async {
+    await tester.pumpWidget(
+      createTestApp(onHistory: () {}, onAnalytics: () {}, onGoals: () {}),
+    );
+
+    expect(find.text('Enter Data'), findsOneWidget);
+  });
+
+  testWidgets('Enter Data shortcut calls its callback', (tester) async {
+    var tapped = false;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: DashboardQuickAccess(
+            onEnterData: () => tapped = true,
+            onHistory: () {},
+            onCalendar: () {},
+            onAnalytics: () {},
+            onGoals: () {},
+            onBackup: () {},
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Enter Data'));
 
     expect(tapped, isTrue);
   });
